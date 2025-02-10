@@ -331,7 +331,19 @@ func (u *UI) showPasswords() fyne.CanvasObject {
 		passwordsWidgets = append(passwordsWidgets, widget.NewLabel("Сервис: "+password.Title))
 		passwordsWidgets = append(passwordsWidgets, widget.NewLabel("Логин: "+password.Login))
 		passwordsWidgets = append(passwordsWidgets, widget.NewLabel("Пароль: "+password.Password))
-		passwordsWidgets = append(passwordsWidgets, widget.NewSeparator())
+		// Добавляем кнопки "Изменить" и "Удалить"
+        changeButton := widget.NewButton("Изменить", func() {
+            u.logger.Info("Изменить карту: " + password.Title)
+            // Логика для изменения карты
+        })
+        deleteButton := widget.NewButton("Удалить", func() {
+            u.logger.Info("Удалить карту: " + password.Title)
+            // Логика для удаления карты
+        })
+        buttons := container.NewHBox(changeButton, deleteButton)
+        passwordsWidgets = append(passwordsWidgets, buttons)
+
+        passwordsWidgets = append(passwordsWidgets, widget.NewSeparator())
 	}
 
 	return container.NewVBox(passwordsWidgets...)
@@ -399,7 +411,19 @@ func (u *UI) showTextNotes() fyne.CanvasObject {
 	for _, note := range textNotes {
 		textNotesWidgets = append(textNotesWidgets, widget.NewLabel("Заметка: "+note.Title))
 		textNotesWidgets = append(textNotesWidgets, widget.NewLabel("Текст: "+note.Text))
-		textNotesWidgets = append(textNotesWidgets, widget.NewSeparator())
+		// Добавляем кнопки "Изменить" и "Удалить"
+        changeButton := widget.NewButton("Изменить", func() {
+            u.logger.Info("Изменить карту: " + note.Title)
+            // Логика для изменения карты
+        })
+        deleteButton := widget.NewButton("Удалить", func() {
+            u.logger.Info("Удалить карту: " + note.Title)
+            // Логика для удаления карты
+        })
+        buttons := container.NewHBox(changeButton, deleteButton)
+        textNotesWidgets = append(textNotesWidgets, buttons)
+
+        textNotesWidgets = append(textNotesWidgets, widget.NewSeparator())
 	}
 
 	return container.NewVBox(textNotesWidgets...)
@@ -481,7 +505,19 @@ func (u *UI) showBankCards() fyne.CanvasObject {
 		bankCardsWidgets = append(bankCardsWidgets, widget.NewLabel("Карта: "+card.CardNumber))
 		bankCardsWidgets = append(bankCardsWidgets, widget.NewLabel("Срок действия: "+card.ExpiryDate))
 		bankCardsWidgets = append(bankCardsWidgets, widget.NewLabel("CVV: "+card.Cvv))
-		bankCardsWidgets = append(bankCardsWidgets, widget.NewSeparator())
+		// Добавляем кнопки "Изменить" и "Удалить"
+        changeButton := widget.NewButton("Изменить", func() {
+            u.logger.Info("Изменить карту: " + card.Title)
+            // Логика для изменения карты
+        })
+        deleteButton := widget.NewButton("Удалить", func() {
+            u.logger.Info("Удалить карту: " + card.Title)
+            // Логика для удаления карты
+        })
+        buttons := container.NewHBox(changeButton, deleteButton)
+        bankCardsWidgets = append(bankCardsWidgets, buttons)
+
+        bankCardsWidgets = append(bankCardsWidgets, widget.NewSeparator())
 	}
 
 	return container.NewVBox(bankCardsWidgets...)
@@ -596,7 +632,19 @@ func (u *UI) showBinaryFiles() fyne.CanvasObject {
 			dialog.Show()
 		})
 		binaryFilesWidgets = append(binaryFilesWidgets, saveButton)
-		binaryFilesWidgets = append(binaryFilesWidgets, widget.NewSeparator())
+		// Добавляем кнопки "Изменить" и "Удалить"
+        changeButton := widget.NewButton("Изменить", func() {
+            u.logger.Info("Изменить карту: " + file.Title)
+            // Логика для изменения карты
+        })
+        deleteButton := widget.NewButton("Удалить", func() {
+            u.logger.Info("Удалить карту: " + file.Title)
+            // Логика для удаления карты
+        })
+        buttons := container.NewHBox(changeButton, deleteButton)
+        binaryFilesWidgets = append(binaryFilesWidgets, buttons)
+
+        binaryFilesWidgets = append(binaryFilesWidgets, widget.NewSeparator())
 	}
 
 	return container.NewVBox(binaryFilesWidgets...)

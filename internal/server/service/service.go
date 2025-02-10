@@ -146,6 +146,11 @@ func (s *Service) AuthenticateUser(ctx context.Context, username string, passwor
 		return nil, err
 	}
 
+	if user == nil {
+		s.logger.Error("User not found")
+		return nil, errors.New("user not found")
+	}
+
 	// check if password is correct
 	if !passwordhash.CheckPasswordHash(password, user.PasswordHash) {
 		s.logger.Error("Invalid password")
