@@ -307,6 +307,50 @@ func (u *UI) openAddPasswordWindow() {
 	newWindow.Show()
 }
 
+func (u *UI) updatePasswordWindow(password models.LoginPassword) {
+	newWindow := fyne.CurrentApp().NewWindow("Изменить пароль")
+	newWindow.Resize(fyne.NewSize(400, 200))
+
+	titleEntry := widget.NewEntry()
+	titleEntry.SetText(password.Title)
+
+	loginEntry := widget.NewEntry()
+	loginEntry.SetText(password.Login)
+
+	passwordEntry := widget.NewPasswordEntry()
+	passwordEntry.SetText(password.Password)
+
+	saveButton := widget.NewButton("Изменить", func() {
+		u.logger.Info("Сохраняем пароль: " + titleEntry.Text)
+		err := u.handler.UpdateDataOnServer(u.ctx, models.Data{
+			DBID:     password.DBID,
+			DataType: models.DataTypeLoginPassword,
+			Data: models.LoginPassword{
+				DBID:     password.DBID,
+				Title:    titleEntry.Text,
+				Login:    loginEntry.Text,
+				Password: passwordEntry.Text,
+			},
+		})
+		if err != nil {
+			log.Println("Failed to update password:", err)
+			u.showMainWindow(fyne.CurrentApp())
+		}
+		newWindow.Close()
+	})
+
+	form := container.NewVBox(
+		widget.NewLabel("Введите данные пароля:"),
+		titleEntry,
+		loginEntry,
+		passwordEntry,
+		saveButton,
+	)
+
+	newWindow.SetContent(form)
+	newWindow.Show()
+}
+
 func (u *UI) showPasswords() fyne.CanvasObject {
 	u.logger.Info("Получаем пароли")
 	// Получаем данные о паролях с сервера
@@ -320,7 +364,7 @@ func (u *UI) showPasswords() fyne.CanvasObject {
 	for _, data := range dataFromServer {
 		if password, ok := data.Data.(models.LoginPassword); ok {
 			passwords = append(passwords, password)
-		} 
+		}
 	}
 
 	if len(passwords) == 0 {
@@ -336,6 +380,7 @@ func (u *UI) showPasswords() fyne.CanvasObject {
 		passwordsWidgets = append(passwordsWidgets, widget.NewLabel("Пароль: "+passwordInside.Password))
 		changeButton := widget.NewButton("Изменить", func() {
 			// Логика для изменения карты
+			u.updatePasswordWindow(passwordInside)
 		})
 		deleteButton := widget.NewButton("Удалить", func() {
 			// Логика для удаления карты
@@ -387,6 +432,45 @@ func (u *UI) openTextWindow(title, text string) {
 	newWindow.Show()
 }
 
+func (u *UI) updateTextWindow(textNote models.TextNote) {
+	newWindow := fyne.CurrentApp().NewWindow("Изменить заметку")
+	newWindow.Resize(fyne.NewSize(400, 200))
+
+	titleEntry := widget.NewEntry()
+	titleEntry.SetText(textNote.Title)
+
+	textEntry := widget.NewMultiLineEntry()
+	textEntry.SetText(textNote.Text)
+
+	saveButton := widget.NewButton("Изменить", func() {
+		u.logger.Info("Сохраняем заметку: " + titleEntry.Text)
+		err := u.handler.UpdateDataOnServer(u.ctx, models.Data{
+			DBID:     textNote.DBID,
+			DataType: models.DataTypeTextNote,
+			Data: models.TextNote{
+				DBID:  textNote.DBID,
+				Title: titleEntry.Text,
+				Text:  textEntry.Text,
+			},
+		})
+		if err != nil {
+			log.Println("Failed to update text note:", err)
+			u.showMainWindow(fyne.CurrentApp())
+		}
+		newWindow.Close()
+	})
+
+	form := container.NewVBox(
+		widget.NewLabel("Введите данные заметки:"),
+		titleEntry,
+		textEntry,
+		saveButton,
+	)
+
+	newWindow.SetContent(form)
+	newWindow.Show()
+}
+
 func (u *UI) showTextNotes() fyne.CanvasObject {
 	u.logger.Info("Получаем заметки")
 	// Получаем данные о заметках с сервера
@@ -415,6 +499,7 @@ func (u *UI) showTextNotes() fyne.CanvasObject {
 		changeButton := widget.NewButton("Изменить", func() {
 			u.logger.Info("Изменить карту: " + note.Title)
 			// Логика для изменения карты
+			u.updateTextWindow(note)
 		})
 		deleteButton := widget.NewButton("Удалить", func() {
 			u.logger.Info("Удалить карту: " + note.Title)
@@ -478,6 +563,55 @@ func (u *UI) openAddBankCardWindow() {
 	newWindow.Show()
 }
 
+func (u *UI) updateBankCardWindow(bankCard models.BankCard) {
+	newWindow := fyne.CurrentApp().NewWindow("Изменить банковскую карту")
+	newWindow.Resize(fyne.NewSize(400, 200))
+
+	titleEntry := widget.NewEntry()
+	titleEntry.SetText(bankCard.Title)
+
+	cardNumberEntry := widget.NewEntry()
+	cardNumberEntry.SetText(bankCard.CardNumber)
+
+	expiryEntry := widget.NewEntry()
+	expiryEntry.SetText(bankCard.ExpiryDate)
+
+	cvvEntry := widget.NewEntry()
+	cvvEntry.SetText(bankCard.Cvv)
+
+	saveButton := widget.NewButton("Изменить", func() {
+		u.logger.Info("Сохраняем карту: " + titleEntry.Text)
+		err := u.handler.UpdateDataOnServer(u.ctx, models.Data{
+			DBID:     bankCard.DBID,
+			DataType: models.DataTypeBankCard,
+			Data: models.BankCard{
+				DBID:       bankCard.DBID,
+				Title:      titleEntry.Text,
+				CardNumber: cardNumberEntry.Text,
+				ExpiryDate: expiryEntry.Text,
+				Cvv:        cvvEntry.Text,
+			},
+		})
+		if err != nil {
+			log.Println("Failed to update bank card:", err)
+			u.showMainWindow(fyne.CurrentApp())
+		}
+		newWindow.Close()
+	})
+
+	form := container.NewVBox(
+		widget.NewLabel("Введите данные карты:"),
+		titleEntry,
+		cardNumberEntry,
+		expiryEntry,
+		cvvEntry,
+		saveButton,
+	)
+
+	newWindow.SetContent(form)
+	newWindow.Show()
+}
+
 // showBankCards отображает список банковских карт
 func (u *UI) showBankCards() fyne.CanvasObject {
 	u.logger.Info("Получаем банковские карты")
@@ -502,6 +636,7 @@ func (u *UI) showBankCards() fyne.CanvasObject {
 	// Создаем список виджетов для отображения банковских карт
 	var bankCardsWidgets []fyne.CanvasObject
 	for _, card := range bankCards {
+		card := card
 		bankCardsWidgets = append(bankCardsWidgets, widget.NewLabel("Банк: "+card.Title))
 		bankCardsWidgets = append(bankCardsWidgets, widget.NewLabel("Карта: "+card.CardNumber))
 		bankCardsWidgets = append(bankCardsWidgets, widget.NewLabel("Срок действия: "+card.ExpiryDate))
@@ -509,7 +644,7 @@ func (u *UI) showBankCards() fyne.CanvasObject {
 		changeButton := widget.NewButton("Изменить", func() {
 			u.logger.Info("Изменить карту: " + card.Title)
 			// Логика для изменения карты
-			
+			u.updateBankCardWindow(card)
 		})
 		deleteButton := widget.NewButton("Удалить", func() {
 			u.logger.Info("Удалить карту: " + card.Title)

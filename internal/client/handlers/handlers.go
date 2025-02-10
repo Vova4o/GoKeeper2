@@ -371,6 +371,8 @@ func (c *GRPCClient) DeleteDataFromServer(ctx context.Context, dbID int) error {
 func (c *GRPCClient) UpdateDataOnServer(ctx context.Context, data models.Data) error {
 	c.log.Info("Update data handle called.")
 
+	
+
 	encryptedData, err := encryptData(data, c.MasterPassword)
 	if err != nil {
 		c.log.Error("Failed to encrypt data: " + err.Error())
