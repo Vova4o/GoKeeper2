@@ -331,59 +331,59 @@ func TestSaveData(t *testing.T) {
 }
 
 func TestReadData(t *testing.T) {
-	storage, mock, teardown := setupTestDB(t)
-	defer teardown()
+    storage, mock, teardown := setupTestDB(t)
+    defer teardown()
 
-	tests := []struct {
-		name      string
-		userID    int
-		dataType  models.DataType
-		mockFunc  func()
-		wantCount int
-		wantErr   bool
-	}{
-		{
-			name:     "successful read",
-			userID:   1,
-			dataType: models.DataTypeLoginPassword,
-			mockFunc: func() {
-				rows := sqlmock.NewRows([]string{"user_id", "data_type", "data"}).
-					AddRow(1, models.DataTypeLoginPassword, "test data 1").
-					AddRow(1, models.DataTypeLoginPassword, "test data 2")
-				mock.ExpectQuery("SELECT user_id, data_type, data FROM private_infos").
-					WithArgs(1, models.DataTypeLoginPassword).
-					WillReturnRows(rows)
-			},
-			wantCount: 2,
-			wantErr:   false,
-		},
-		{
-			name:     "no data found",
-			userID:   1,
-			dataType: models.DataTypeLoginPassword,
-			mockFunc: func() {
-				rows := sqlmock.NewRows([]string{"user_id", "data_type", "data"})
-				mock.ExpectQuery("SELECT user_id, data_type, data FROM private_infos").
-					WithArgs(1, models.DataTypeLoginPassword).
-					WillReturnRows(rows)
-			},
-			wantCount: 0,
-			wantErr:   false,
-		},
-	}
+    tests := []struct {
+        name      string
+        userID    int
+        dataType  models.DataType
+        mockFunc  func()
+        wantCount int
+        wantErr   bool
+    }{
+        {
+            name:     "successful read",
+            userID:   1,
+            dataType: models.DataTypeLoginPassword,
+            mockFunc: func() {
+                rows := sqlmock.NewRows([]string{"id", "user_id", "data_type", "data"}).
+                    AddRow(1, 1, models.DataTypeLoginPassword, "test data 1").
+                    AddRow(2, 1, models.DataTypeLoginPassword, "test data 2")
+                mock.ExpectQuery("SELECT id, user_id, data_type, data FROM private_infos").
+                    WithArgs(1, models.DataTypeLoginPassword).
+                    WillReturnRows(rows)
+            },
+            wantCount: 2,
+            wantErr:   false,
+        },
+        {
+            name:     "no data found",
+            userID:   1,
+            dataType: models.DataTypeLoginPassword,
+            mockFunc: func() {
+                rows := sqlmock.NewRows([]string{"id", "user_id", "data_type", "data"})
+                mock.ExpectQuery("SELECT id, user_id, data_type, data FROM private_infos").
+                    WithArgs(1, models.DataTypeLoginPassword).
+                    WillReturnRows(rows)
+            },
+            wantCount: 0,
+            wantErr:   false,
+        },
+    }
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.mockFunc()
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            tt.mockFunc()
 
-			data, err := storage.ReadData(context.Background(), tt.userID, tt.dataType)
+            data, err := storage.ReadData(context.Background(), tt.userID, tt.dataType)
 
-			if tt.wantErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-				assert.Len(t, data, tt.wantCount)
-			}
-		})
-	}
+            if tt.wantErr {
+                assert.Error(t, err)
+            } else {
+                assert.NoError(t, err)
+                assert.Len(t, data, tt.wantCount)
+            }
+        })
+    }
 }
