@@ -40,6 +40,8 @@ type Servicer interface {
 	RefreshToken(ctx context.Context, refreshToken string) (*models.UserRegesred, error)
 	RecordData(ctx context.Context, userID int, data models.DataToPass) error
 	ReadData(ctx context.Context, userID int, dataType models.DataType) ([]*models.DataToPass, error)
+	UpdateData(ctx context.Context, dataID int, data string) error
+	DeleteData(ctx context.Context, dataID int) error
 }
 
 // JWTServicer interface for JWT service methods
@@ -242,4 +244,50 @@ func (s *HandleServiceServer) ReceiveData(req *pb.ReceiveDataRequest, stream pb.
 	}
 
 	return nil
+}
+
+// UpdateData method for updating data in database
+func (s *HandleServiceServer) UpdateData(ctx context.Context, req *pb.DataToPass) (*pb.SendDataResponse, error) {
+	s.logger.Info("UpdateData handle called!")
+
+	if req == nil {
+		s.logger.Error("Data is nil")
+		return nil, status.Errorf(codes.InvalidArgument, "data is nil")
+	}
+
+	if req.DBID == 0 {
+		s.logger.Error("DBID is 0")
+		return nil, status.Errorf(codes.InvalidArgument, "DBID is 0")
+	}
+
+	err := s.serv.UpdateData(ctx, int(req.DBID), req.StringData)
+	if err != nil {
+		s.logger.Error("Failed to update data: " + err.Error())
+		return nil, status.Errorf(codes.Internal, "failed to update data")
+	}
+
+	return &pb.SendDataResponse{Success: true}, nil
+}
+
+// DeleteData method for deleting data from database
+func (s *HandleServiceServer) DeleteData(ctx context.Context, req *pb.DeleteRequest) (*pb.SendDataResponse, error) {
+	s.logger.Info("DeleteData handle called!")
+
+	if req == nil {
+		s.logger.Error("Data is nil")
+		return nil, status.Errorf(codes.InvalidArgument, "data is nil")
+	}
+
+	if req.DBID == 0 {
+		s.logger.Error("DBID is 0")
+		return nil, status.Errorf(codes.InvalidArgument, "DBID is 0")
+	}
+
+	err := s.serv.DeleteData(ctx, int(req.DBID))
+	if err != nil {
+		s.logger.Error("Failed to delete data: " + err.Error())
+		return nil, status.Errorf(codes.Internal, "failed to delete data")
+	}
+
+	return &pb.SendDataResponse{Success: true}, nil
 }

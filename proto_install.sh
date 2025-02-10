@@ -1,5 +1,5 @@
 # Установите protoc (если еще не установлен)
-brew install protobuf
+# brew install protobuf
 
 # Установите плагины для Go
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest

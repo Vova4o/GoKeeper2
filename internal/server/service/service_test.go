@@ -95,6 +95,16 @@ func (m *MockStorager) FindUser(ctx context.Context, username string) (*models.U
 	return nil, args.Error(1)
 }
 
+func (m *MockStorager) UpdateData(ctx context.Context, dataID int, data string) error {
+	args := m.Called(ctx, dataID, data)
+	return args.Error(0)
+}
+
+func (m *MockStorager) DeleteData(ctx context.Context, dataID int) error {
+	args := m.Called(ctx, dataID)
+	return args.Error(0)
+}
+
 func TestRegisterUser(t *testing.T) {
 	mockStorager := new(MockStorager)
 	logger := logger.NewLogger("info")

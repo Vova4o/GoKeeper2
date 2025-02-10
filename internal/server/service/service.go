@@ -32,6 +32,8 @@ type Storager interface {
 	GetRefreshTokens(ctx context.Context, userID int) ([]models.RefreshToken, error)
 	SaveData(ctx context.Context, userID int, dataType models.DataType, data string) error
 	ReadData(ctx context.Context, userID int, dataType models.DataType) ([]*models.PrivateInfo, error)
+	UpdateData(ctx context.Context, dataID int, data string) error
+	DeleteData(ctx context.Context, dataID int) error
 }
 
 // NewService создает новый экземпляр сервиса
@@ -323,4 +325,28 @@ func (s *Service) ReadData(ctx context.Context, userID int, dataType models.Data
 	}
 
 	return dataList, nil
+}
+
+// UpdateData обновляет данные на сервере
+func (s *Service) UpdateData(ctx context.Context, dataID int, data string) error {
+	// Обновление данных в базе данных (пример)
+	err := s.stor.UpdateData(ctx, dataID, data)
+	if err != nil {
+		s.logger.Error("Failed to update data: " + err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// DeleteData удаляет данные с сервера по номеру записи в бд
+func (s *Service) DeleteData(ctx context.Context, dataID int) error {
+	// Удаление данных из базы данных (пример)
+	err := s.stor.DeleteData(ctx, dataID)
+	if err != nil {
+		s.logger.Error("Failed to delete data: " + err.Error())
+		return err
+	}
+
+	return nil
 }

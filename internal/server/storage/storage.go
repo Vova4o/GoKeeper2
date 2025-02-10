@@ -6,6 +6,7 @@ import (
 	"time"
 
 	// Используем драйвер для PostgreSQL
+
 	_ "github.com/lib/pq"
 	"github.com/vova4o/gokeeper2/internal/server/models"
 	"github.com/vova4o/gokeeper2/package/logger"
@@ -280,6 +281,32 @@ func (s *Storage) ReadData(ctx context.Context, userID int, dataType models.Data
 
 	s.logger.Info("Data read successfully")
 	return dataList, nil
+}
+
+// UpdateData обновляет данные на сервере
+func (s *Storage) UpdateData(ctx context.Context, dataID int, data string) error {
+	query := `UPDATE private_infos SET data = $1, updated_at = $2 WHERE id = $3`
+	_, err := s.db.ExecContext(ctx, query, data, time.Now(), dataID)
+	if err != nil {
+		s.logger.Error("Failed to update data")
+		return err
+	}
+
+	s.logger.Info("Data updated successfully")
+	return nil
+}
+
+// DeleteData удаляет данные с сервера по номеру записи в бд
+func (s *Storage) DeleteData(ctx context.Context, dataID int) error {
+	query := `DELETE FROM private_infos WHERE id = $1`
+	_, err := s.db.ExecContext(ctx, query, dataID)
+	if err != nil {
+		s.logger.Error("Failed to delete data")
+		return err
+	}
+
+	s.logger.Info("Data deleted successfully")
+	return nil
 }
 
 // Close закрывает соединение с базой данных

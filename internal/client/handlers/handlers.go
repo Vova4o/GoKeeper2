@@ -333,7 +333,7 @@ func (c *GRPCClient) GetDataFromServer(ctx context.Context, dataType models.Data
 		}
 
 		readData := models.Data{
-			DBID:     int(res.Data.DBID),
+			DBID:     data.DBID,
 			DataType: decryptedData.DataType,
 			Data:     decryptedData.Data,
 		}
@@ -342,6 +342,83 @@ func (c *GRPCClient) GetDataFromServer(ctx context.Context, dataType models.Data
 	}
 
 	return dataList, nil
+}
+
+// DeleteDataFromServer function for deleting data from server
+func (c *GRPCClient) DeleteDataFromServer(ctx context.Context, dbID int) error {
+	c.log.Info("DeleteDataFromServer called!")
+
+	err := c.CheckAndRefreshToken(ctx)
+	if err != nil {
+		c.log.Error("Error refreshing token")
+		return err
+	}
+
+	// Добавление токена в метаданные
+	md := metadata.New(map[string]string{"authorization": c.AccessToken})
+	ctx = metadata.NewOutgoingContext(ctx, md)
+
+	_, err = c.client.DeleteData(ctx, &pb.DeleteRequest{DBID: int64(dbID)})
+	if err != nil {
+		c.log.Error("Error deleting data from server")
+		return err
+	}
+
+	return nil
+}
+
+// UpdateDataOnServer updates existing record
+func (c *GRPCClient) UpdateDataOnServer(ctx context.Context, data models.Data) error {
+	c.log.Info("Update data handle called.")
+
+	encryptedData, err := encryptData(data, c.MasterPassword)
+	if err != nil {
+		c.log.Error("Failed to encrypt data: " + err.Error())
+		return err
+	}
+
+	pbData := convertDataToPBDatas(encryptedData)
+
+	err = c.CheckAndRefreshToken(ctx)
+	if err != nil {
+		c.log.Error("Failed to refresh token: " + err.Error())
+		return err
+	}
+
+	// Добавление токена в метаданные
+	md := metadata.New(map[string]string{"authorization": c.AccessToken})
+	ctx = metadata.NewOutgoingContext(ctx, md)
+
+	_, err = c.client.UpdateData(ctx, pbData)
+	if err != nil {
+		c.log.Error("Failed to update data: " + err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// DeleteDataOnServer deletes existing record
+func (c *GRPCClient) DeleteDataOnServer(ctx context.Context, dbID int) error {
+	c.log.Info("Delete data handle called.")
+
+	err := c.CheckAndRefreshToken(ctx)
+	if err != nil {
+		c.log.Error("Failed to refresh token: " + err.Error())
+		return err
+	}
+
+	// Добавление токена в метаданные
+	md := metadata.New(map[string]string{"authorization": c.AccessToken})
+	ctx = metadata.NewOutgoingContext(ctx, md)
+
+	_, err = c.client.DeleteData(ctx, &pb.DeleteRequest{DBID: int64(dbID)})
+	if err != nil {
+		c.log.Error("Failed to delete data: " + err.Error())
+		return err
+	}
+
+	return nil
 }
 
 // encryptData encrypts data based on its type
@@ -367,6 +444,7 @@ func encryptData(data models.Data, key string) (models.DataToPass, error) {
 	}
 
 	return models.DataToPass{
+		DBID:       data.DBID,
 		DataType:   data.DataType,
 		DataString: encryptedData,
 	}, nil
@@ -386,6 +464,7 @@ func decryptData(data models.DataToPass, key string) (models.Data, error) {
 		parts := strings.Split(decryptedData, "|")
 		if len(parts) == 3 {
 			dataContent = models.LoginPassword{
+				DBID:     data.DBID,
 				Title:    parts[0],
 				Login:    parts[1],
 				Password: parts[2],
@@ -397,6 +476,7 @@ func decryptData(data models.DataToPass, key string) (models.Data, error) {
 		parts := strings.Split(decryptedData, "|")
 		if len(parts) == 2 {
 			dataContent = models.TextNote{
+				DBID:  data.DBID,
 				Title: parts[0],
 				Text:  parts[1],
 			}
@@ -411,6 +491,7 @@ func decryptData(data models.DataToPass, key string) (models.Data, error) {
 				return models.Data{}, err
 			}
 			dataContent = models.BinaryData{
+				DBID:  data.DBID,
 				Title: parts[0],
 				Data:  decodedData,
 			}
@@ -421,6 +502,7 @@ func decryptData(data models.DataToPass, key string) (models.Data, error) {
 		parts := strings.Split(decryptedData, "|")
 		if len(parts) == 4 {
 			dataContent = models.BankCard{
+				DBID:       data.DBID,
 				Title:      parts[0],
 				CardNumber: parts[1],
 				ExpiryDate: parts[2],
@@ -434,6 +516,7 @@ func decryptData(data models.DataToPass, key string) (models.Data, error) {
 	}
 
 	return models.Data{
+		DBID:     data.DBID,
 		DataType: data.DataType,
 		Data:     dataContent,
 	}, nil
@@ -509,6 +592,7 @@ func adjustKeySize(key string) string {
 
 func convertDataToPBDatas(d models.DataToPass) *pb.DataToPass {
 	return &pb.DataToPass{
+		DBID:       int64(d.DBID),
 		DataType:   pb.DataType(d.DataType),
 		StringData: d.DataString,
 	}
@@ -516,6 +600,7 @@ func convertDataToPBDatas(d models.DataToPass) *pb.DataToPass {
 
 func convertPBToData(pbd *pb.DataToPass) models.DataToPass {
 	return models.DataToPass{
+		DBID:       int(pbd.DBID),
 		DataType:   models.DataTypes(pbd.DataType),
 		DataString: pbd.StringData,
 	}

@@ -39,12 +39,14 @@ type Data struct {
 
 // DataToPass структура для передачи данных между клиентом и сервером
 type DataToPass struct {
+	DBID       int
 	DataType   DataTypes
 	DataString string
 }
 
 // LoginPassword структура для хранения данных логина и пароля
 type LoginPassword struct {
+	DBID     int
 	Title    string
 	Login    string
 	Password string
@@ -54,6 +56,7 @@ func (LoginPassword) isDataContent() {}
 
 // TextNote структура для хранения текстовой заметки
 type TextNote struct {
+	DBID  int
 	Title string
 	Text  string
 }
@@ -62,6 +65,7 @@ func (TextNote) isDataContent() {}
 
 // BinaryData структура для хранения бинарных данных
 type BinaryData struct {
+	DBID  int
 	Title string
 	Data  []byte
 }
@@ -70,6 +74,7 @@ func (BinaryData) isDataContent() {}
 
 // BankCard структура для хранения данных банковской карты
 type BankCard struct {
+	DBID       int
 	Title      string
 	CardNumber string
 	ExpiryDate string

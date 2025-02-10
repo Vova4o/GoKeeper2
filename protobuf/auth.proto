@@ -11,6 +11,8 @@ service AuthService {
   rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
   rpc SendData(SendDataRequest) returns (SendDataResponse);
   rpc ReceiveData(ReceiveDataRequest) returns (stream ReceiveDataResponse);
+  rpc UpdateData(DataToPass) returns (SendDataResponse);
+  rpc DeleteData(DeleteRequest) returns (SendDataResponse);
 }
 
 message RegisterRequest {
@@ -112,4 +114,8 @@ message ReceiveDataRequest {
 
 message ReceiveDataResponse {
   DataToPass data = 1;
+}
+
+message DeleteRequest {
+  int64 DBID = 1;
 }

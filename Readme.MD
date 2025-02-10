@@ -88,6 +88,10 @@ chmod +x proto_install.sh
    ```sh
    curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v3.19.1/protoc-3.19.1-osx-x86_64.zip
    unzip protoc-3.19.1-osx-x86_64.zip -d $HOME/protoc
+
+   go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+   go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
    export PATH="$HOME/protoc/bin:$PATH"
    ```
 

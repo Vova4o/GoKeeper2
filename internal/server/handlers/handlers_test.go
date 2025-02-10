@@ -90,6 +90,16 @@ func (m *MockService) ReadData(ctx context.Context, userID int, dataType models.
 	return nil, args.Error(1)
 }
 
+func (m *MockService) UpdateData(ctx context.Context, dataID int, data string) error {
+	args := m.Called(ctx, dataID, data)
+	return args.Error(0)
+}
+
+func (m *MockService) DeleteData(ctx context.Context, dataID int) error {
+	args := m.Called(ctx, dataID)
+	return args.Error(0)
+}
+
 func TestRegister(t *testing.T) {
 	tests := []struct {
 		name          string

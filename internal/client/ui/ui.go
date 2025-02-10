@@ -22,6 +22,8 @@ type GRPCClienter interface {
 	MasterPasswordStoreOrCheck(ctx context.Context, masterPassword string) (bool, error)
 	AddDataToServer(ctx context.Context, data models.Data) error
 	GetDataFromServer(ctx context.Context, dataType models.DataTypes) ([]models.Data, error)
+	UpdateDataOnServer(ctx context.Context, data models.Data) error
+	DeleteDataOnServer(ctx context.Context, data int) error
 }
 
 // UI структура для графического интерфейса
@@ -318,7 +320,7 @@ func (u *UI) showPasswords() fyne.CanvasObject {
 	for _, data := range dataFromServer {
 		if password, ok := data.Data.(models.LoginPassword); ok {
 			passwords = append(passwords, password)
-		}
+		} 
 	}
 
 	if len(passwords) == 0 {
@@ -328,22 +330,21 @@ func (u *UI) showPasswords() fyne.CanvasObject {
 	// Создаем список виджетов для отображения паролей
 	var passwordsWidgets []fyne.CanvasObject
 	for _, password := range passwords {
-		passwordsWidgets = append(passwordsWidgets, widget.NewLabel("Сервис: "+password.Title))
-		passwordsWidgets = append(passwordsWidgets, widget.NewLabel("Логин: "+password.Login))
-		passwordsWidgets = append(passwordsWidgets, widget.NewLabel("Пароль: "+password.Password))
-		// Добавляем кнопки "Изменить" и "Удалить"
-        changeButton := widget.NewButton("Изменить", func() {
-            u.logger.Info("Изменить карту: " + password.Title)
-            // Логика для изменения карты
-        })
-        deleteButton := widget.NewButton("Удалить", func() {
-            u.logger.Info("Удалить карту: " + password.Title)
-            // Логика для удаления карты
-        })
-        buttons := container.NewHBox(changeButton, deleteButton)
-        passwordsWidgets = append(passwordsWidgets, buttons)
+		passwordInside := password
+		passwordsWidgets = append(passwordsWidgets, widget.NewLabel("Сервис: "+passwordInside.Title))
+		passwordsWidgets = append(passwordsWidgets, widget.NewLabel("Логин: "+passwordInside.Login))
+		passwordsWidgets = append(passwordsWidgets, widget.NewLabel("Пароль: "+passwordInside.Password))
+		changeButton := widget.NewButton("Изменить", func() {
+			// Логика для изменения карты
+		})
+		deleteButton := widget.NewButton("Удалить", func() {
+			// Логика для удаления карты
+			u.handler.DeleteDataOnServer(u.ctx, passwordInside.DBID)
+		})
+		buttons := container.NewHBox(changeButton, deleteButton)
+		passwordsWidgets = append(passwordsWidgets, buttons)
 
-        passwordsWidgets = append(passwordsWidgets, widget.NewSeparator())
+		passwordsWidgets = append(passwordsWidgets, widget.NewSeparator())
 	}
 
 	return container.NewVBox(passwordsWidgets...)
@@ -411,19 +412,19 @@ func (u *UI) showTextNotes() fyne.CanvasObject {
 	for _, note := range textNotes {
 		textNotesWidgets = append(textNotesWidgets, widget.NewLabel("Заметка: "+note.Title))
 		textNotesWidgets = append(textNotesWidgets, widget.NewLabel("Текст: "+note.Text))
-		// Добавляем кнопки "Изменить" и "Удалить"
-        changeButton := widget.NewButton("Изменить", func() {
-            u.logger.Info("Изменить карту: " + note.Title)
-            // Логика для изменения карты
-        })
-        deleteButton := widget.NewButton("Удалить", func() {
-            u.logger.Info("Удалить карту: " + note.Title)
-            // Логика для удаления карты
-        })
-        buttons := container.NewHBox(changeButton, deleteButton)
-        textNotesWidgets = append(textNotesWidgets, buttons)
+		changeButton := widget.NewButton("Изменить", func() {
+			u.logger.Info("Изменить карту: " + note.Title)
+			// Логика для изменения карты
+		})
+		deleteButton := widget.NewButton("Удалить", func() {
+			u.logger.Info("Удалить карту: " + note.Title)
+			// Логика для удаления карты
+			u.handler.DeleteDataOnServer(u.ctx, note.DBID)
+		})
+		buttons := container.NewHBox(changeButton, deleteButton)
+		textNotesWidgets = append(textNotesWidgets, buttons)
 
-        textNotesWidgets = append(textNotesWidgets, widget.NewSeparator())
+		textNotesWidgets = append(textNotesWidgets, widget.NewSeparator())
 	}
 
 	return container.NewVBox(textNotesWidgets...)
@@ -505,19 +506,20 @@ func (u *UI) showBankCards() fyne.CanvasObject {
 		bankCardsWidgets = append(bankCardsWidgets, widget.NewLabel("Карта: "+card.CardNumber))
 		bankCardsWidgets = append(bankCardsWidgets, widget.NewLabel("Срок действия: "+card.ExpiryDate))
 		bankCardsWidgets = append(bankCardsWidgets, widget.NewLabel("CVV: "+card.Cvv))
-		// Добавляем кнопки "Изменить" и "Удалить"
-        changeButton := widget.NewButton("Изменить", func() {
-            u.logger.Info("Изменить карту: " + card.Title)
-            // Логика для изменения карты
-        })
-        deleteButton := widget.NewButton("Удалить", func() {
-            u.logger.Info("Удалить карту: " + card.Title)
-            // Логика для удаления карты
-        })
-        buttons := container.NewHBox(changeButton, deleteButton)
-        bankCardsWidgets = append(bankCardsWidgets, buttons)
+		changeButton := widget.NewButton("Изменить", func() {
+			u.logger.Info("Изменить карту: " + card.Title)
+			// Логика для изменения карты
+			
+		})
+		deleteButton := widget.NewButton("Удалить", func() {
+			u.logger.Info("Удалить карту: " + card.Title)
+			// Логика для удаления карты
+			u.handler.DeleteDataOnServer(u.ctx, card.DBID)
+		})
+		buttons := container.NewHBox(changeButton, deleteButton)
+		bankCardsWidgets = append(bankCardsWidgets, buttons)
 
-        bankCardsWidgets = append(bankCardsWidgets, widget.NewSeparator())
+		bankCardsWidgets = append(bankCardsWidgets, widget.NewSeparator())
 	}
 
 	return container.NewVBox(bankCardsWidgets...)
@@ -632,19 +634,15 @@ func (u *UI) showBinaryFiles() fyne.CanvasObject {
 			dialog.Show()
 		})
 		binaryFilesWidgets = append(binaryFilesWidgets, saveButton)
-		// Добавляем кнопки "Изменить" и "Удалить"
-        changeButton := widget.NewButton("Изменить", func() {
-            u.logger.Info("Изменить карту: " + file.Title)
-            // Логика для изменения карты
-        })
-        deleteButton := widget.NewButton("Удалить", func() {
-            u.logger.Info("Удалить карту: " + file.Title)
-            // Логика для удаления карты
-        })
-        buttons := container.NewHBox(changeButton, deleteButton)
-        binaryFilesWidgets = append(binaryFilesWidgets, buttons)
+		deleteButton := widget.NewButton("Удалить", func() {
+			u.logger.Info("Удалить карту: " + file.Title)
+			// Логика для удаления карты
+			u.handler.DeleteDataOnServer(u.ctx, file.DBID)
+		})
+		buttons := container.NewHBox(deleteButton)
+		binaryFilesWidgets = append(binaryFilesWidgets, buttons)
 
-        binaryFilesWidgets = append(binaryFilesWidgets, widget.NewSeparator())
+		binaryFilesWidgets = append(binaryFilesWidgets, widget.NewSeparator())
 	}
 
 	return container.NewVBox(binaryFilesWidgets...)

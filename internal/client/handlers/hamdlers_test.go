@@ -86,6 +86,16 @@ func (m *MockAuthServiceClient) SendData(ctx context.Context, in *pb.SendDataReq
 	return args.Get(0).(*pb.SendDataResponse), args.Error(1)
 }
 
+func (m *MockAuthServiceClient) DeleteData(ctx context.Context, in *pb.DeleteRequest, opts ...grpc.CallOption) (*pb.SendDataResponse, error) {
+	args := m.Called(ctx, in)
+	return args.Get(0).(*pb.SendDataResponse), args.Error(1)
+}
+
+func (m *MockAuthServiceClient) UpdateData(ctx context.Context, in *pb.DataToPass, opts ...grpc.CallOption) (*pb.SendDataResponse, error) {
+	args := m.Called(ctx, in)
+	return args.Get(0).(*pb.SendDataResponse), args.Error(1)
+}
+
 // Мок для стрима
 type MockAuthServiceReceiveDataClient struct {
 	mock.Mock
