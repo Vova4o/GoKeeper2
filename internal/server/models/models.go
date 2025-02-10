@@ -58,7 +58,7 @@ type RefreshToken struct {
 
 // PrivateInfo модель для хранения приватной информации
 type PrivateInfo struct {
-	DBID     int 
+	DBID     int
 	UserID   int
 	DataType int
 	Data     string

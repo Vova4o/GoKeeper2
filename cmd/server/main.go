@@ -11,10 +11,10 @@ import (
 	"strconv"
 	"syscall"
 
-	"github.com/vova4o/gokeeper2/internal/server/service"
-	"github.com/vova4o/gokeeper2/internal/server/storage"
 	"github.com/vova4o/gokeeper2/internal/server/flags"
 	"github.com/vova4o/gokeeper2/internal/server/handlers"
+	"github.com/vova4o/gokeeper2/internal/server/service"
+	"github.com/vova4o/gokeeper2/internal/server/storage"
 	"github.com/vova4o/gokeeper2/package/jwtauth"
 	"github.com/vova4o/gokeeper2/package/logger"
 
