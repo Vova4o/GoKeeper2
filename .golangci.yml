@@ -1,0 +1,54 @@
+linters:
+  enable:
+    - govet
+    - errcheck
+    - staticcheck
+    - gosimple
+    - unused
+    - ineffassign
+    - typecheck
+    - gofmt
+    - goimports
+    - gocyclo
+    - dupl
+    - unconvert
+    - misspell
+    - gocritic
+
+run:
+  timeout: 5m
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errcheck
+        - govet
+        - staticcheck
+        - gosimple
+        - unused
+        - ineffassign
+        - deadcode
+        - typecheck
+        - gofmt
+        - goimports
+        - gocyclo
+        - dupl
+        - unconvert
+        - misspell
+        - gocritic
+    - path: ^protobuf/
+      linters:
+        - typecheck
+    - path: ^internal/client/ui/
+      linters:
+        - typecheck
+    - path: ^internal/server/models/
+      linters:
+        - typecheck
+    - path: ^internal/server/handlers/
+      linters:
+        - typecheck
+    - path: ^package/jwtauth/
+      linters:
+        - typecheck
