@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
+        
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
@@ -77,10 +77,8 @@ jobs:
             go test -race -coverprofile=coverage.txt -covermode=atomic ./...
             go tool cover -func=coverage.txt
   
-        - name: Upload coverage to Codecov
+        - name: Upload coverage reports to Codecov
           uses: codecov/codecov-action@v5
-          env:
-            CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           with:
-            files: ./coverage.txt
-            fail_ci_if_error: true
+            token: ${{ secrets.CODECOV_TOKEN }}
+            slug: vova4o/gokeeper2
