@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
@@ -81,4 +81,4 @@ jobs:
           uses: codecov/codecov-action@v5
           with:
             token: ${{ secrets.CODECOV_TOKEN }}
-            slug: vova4o/gokeeper2
+            slug: vova4o/GoKeeper2
