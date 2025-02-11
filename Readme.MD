@@ -1,3 +1,10 @@
+# GoKeeper2
+
+## Данные о тестах и покрытии Codecov
+
+[![codecov](https://codecov.io/gh/vova4o/gokeeper2/branch/main/graph/badge.svg)](https://codecov.io/gh/vova4o/gokeeper2)
+
+
 ## Запуск локального сервера в докере
 
 ```bash

@@ -277,6 +277,53 @@ func TestGetRefreshTokens(t *testing.T) {
 	}
 }
 
+func TestDeleteRefreshToken(t *testing.T) {
+	storage, mock, teardown := setupTestDB(t)
+	defer teardown()
+
+	tests := []struct {
+		name     string
+		token    string
+		mockFunc func()
+		wantErr  bool
+	}{
+		{
+			name:  "successful deletion",
+			token: "testtoken",
+			mockFunc: func() {
+				mock.ExpectExec("DELETE FROM refresh_tokens").
+					WithArgs("testtoken").
+					WillReturnResult(sqlmock.NewResult(1, 1))
+			},
+			wantErr: false,
+		},
+		{
+			name:  "database error",
+			token: "testtoken",
+			mockFunc: func() {
+				mock.ExpectExec("DELETE FROM refresh_tokens").
+					WithArgs("testtoken").
+					WillReturnError(sql.ErrConnDone)
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockFunc()
+
+			err := storage.DeleteRefreshToken(context.Background(), tt.token)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestSaveData(t *testing.T) {
 	storage, mock, teardown := setupTestDB(t)
 	defer teardown()
@@ -386,4 +433,361 @@ func TestReadData(t *testing.T) {
             }
         })
     }
+}
+
+func TestUpdateData(t *testing.T) {
+	storage, mock, teardown := setupTestDB(t)
+	defer teardown()
+
+	tests := []struct {
+		name     string
+		dataID   int
+		data     string
+		mockFunc func()
+		wantErr  bool
+	}{
+		{
+			name:   "successful update",
+			dataID: 1,
+			data:   "new data",
+			mockFunc: func() {
+				mock.ExpectExec("UPDATE private_infos").
+					WithArgs("new data", sqlmock.AnyArg(), 1).
+					WillReturnResult(sqlmock.NewResult(1, 1))
+			},
+			wantErr: false,
+		},
+		{
+			name:   "database error",
+			dataID: 1,
+			data:   "new data",
+			mockFunc: func() {
+				mock.ExpectExec("UPDATE private_infos").
+					WithArgs("new data", sqlmock.AnyArg(), 1).
+					WillReturnError(sql.ErrConnDone)
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockFunc()
+
+			err := storage.UpdateData(context.Background(), tt.dataID, tt.data)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestDeleteData(t *testing.T) {
+	storage, mock, teardown := setupTestDB(t)
+	defer teardown()
+
+	tests := []struct {
+		name     string
+		dataID   int
+		mockFunc func()
+		wantErr  bool
+	}{
+		{
+			name:   "successful deletion",
+			dataID: 1,
+			mockFunc: func() {
+				mock.ExpectExec("DELETE FROM private_infos").
+					WithArgs(1).
+					WillReturnResult(sqlmock.NewResult(1, 1))
+			},
+			wantErr: false,
+		},
+		{
+			name:   "database error",
+			dataID: 1,
+			mockFunc: func() {
+				mock.ExpectExec("DELETE FROM private_infos").
+					WithArgs(1).
+					WillReturnError(sql.ErrConnDone)
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockFunc()
+
+			err := storage.DeleteData(context.Background(), tt.dataID)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestSaveMasterPassword(t *testing.T) {
+    storage, mock, teardown := setupTestDB(t)
+    defer teardown()
+
+    tests := []struct {
+        name     string
+        userID   int
+        password string
+        mockFunc func()
+        wantErr  bool
+    }{
+        {
+            name:     "successful save",
+            userID:   1,
+            password: "test password",
+            mockFunc: func() {
+                mock.ExpectExec("UPDATE users").
+                    WithArgs("test password", sqlmock.AnyArg(), 1). // добавлен updated_at
+                    WillReturnResult(sqlmock.NewResult(1, 1))
+            },
+            wantErr: false,
+        },
+        {
+            name:     "database error",
+            userID:   1,
+            password: "test password",
+            mockFunc: func() {
+                mock.ExpectExec("UPDATE users").
+                    WithArgs("test password", sqlmock.AnyArg(), 1). // добавлен updated_at
+                    WillReturnError(sql.ErrConnDone)
+            },
+            wantErr: true,
+        },
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            tt.mockFunc()
+
+            err := storage.StoreMasterPassword(context.Background(), tt.userID, tt.password)
+
+            if tt.wantErr {
+                assert.Error(t, err)
+            } else {
+                assert.NoError(t, err)
+            }
+        })
+    }
+}
+
+func TestCheckMasterPassword(t *testing.T) {
+	storage, mock, teardown := setupTestDB(t)
+	defer teardown()
+
+	tests := []struct {
+		name     string
+		userID   int
+		mockFunc func()
+		wantHash string
+		wantErr  bool
+	}{
+		{
+			name:   "successful check",
+			userID: 1,
+			mockFunc: func() {
+				rows := sqlmock.NewRows([]string{"master_password_hash"}).
+					AddRow("test hash")
+				mock.ExpectQuery("SELECT master_password_hash FROM users").
+					WithArgs(1).
+					WillReturnRows(rows)
+			},
+			wantHash: "test hash",
+			wantErr:  false,
+		},
+		{
+			name:   "no master password",
+			userID: 1,
+			mockFunc: func() {
+				rows := sqlmock.NewRows([]string{"master_password_hash"})
+				mock.ExpectQuery("SELECT master_password_hash FROM users").
+					WithArgs(1).
+					WillReturnRows(rows)
+			},
+			wantHash: "",
+			wantErr:  false,
+		},
+		{
+			name:   "database error",
+			userID: 1,
+			mockFunc: func() {
+				mock.ExpectQuery("SELECT master_password_hash FROM users").
+					WithArgs(1).
+					WillReturnError(sql.ErrConnDone)
+			},
+			wantHash: "",
+			wantErr:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockFunc()
+
+			hash, err := storage.CheckMasterPassword(context.Background(), tt.userID)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.wantHash, hash)
+			}
+		})
+	}
+}
+
+func TestFindUserByName(t *testing.T) {
+    storage, mock, teardown := setupTestDB(t)
+    defer teardown()
+
+    tests := []struct {
+        name     string
+        username string
+        mockFunc func()
+        wantUser *models.User
+        wantErr  bool
+    }{
+        {
+            name:     "successful find",
+            username: "testuser",
+            mockFunc: func() {
+                rows := sqlmock.NewRows([]string{"id", "password_hash"}).
+                    AddRow(1, "test hash")
+                mock.ExpectQuery("SELECT id, password_hash FROM users WHERE username = \\$1").
+                    WithArgs("testuser").
+                    WillReturnRows(rows)
+            },
+            wantUser: &models.User{
+                UserID:       1,
+                // Username не возвращается из БД в этом запросе
+                PasswordHash: "test hash",
+            },
+            wantErr: false,
+        },
+        {
+            name:     "no user found",
+            username: "testuser",
+            mockFunc: func() {
+                rows := sqlmock.NewRows([]string{"id", "password_hash"})
+                mock.ExpectQuery("SELECT id, password_hash FROM users WHERE username = \\$1").
+                    WithArgs("testuser").
+                    WillReturnRows(rows)
+            },
+            wantUser: nil,
+            wantErr:  false,
+        },
+        {
+            name:     "database error",
+            username: "testuser",
+            mockFunc: func() {
+                mock.ExpectQuery("SELECT id, password_hash FROM users WHERE username = \\$1").
+                    WithArgs("testuser").
+                    WillReturnError(sql.ErrConnDone)
+            },
+            wantUser: nil,
+            wantErr:  true,
+        },
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            tt.mockFunc()
+
+            user, err := storage.FindUserByName(context.Background(), tt.username)
+
+            if tt.wantErr {
+                assert.Error(t, err)
+                assert.Nil(t, user)
+            } else {
+                assert.NoError(t, err)
+                if tt.wantUser == nil {
+                    assert.Nil(t, user)
+                } else {
+                    assert.Equal(t, tt.wantUser, user)
+                }
+            }
+
+            assert.NoError(t, mock.ExpectationsWereMet())
+        })
+    }
+}
+
+func TestFindUserByID(t *testing.T) {
+	storage, mock, teardown := setupTestDB(t)
+	defer teardown()
+
+	tests := []struct {
+		name     string
+		userID   int
+		mockFunc func()
+		wantUser *models.User
+		wantErr  bool
+	}{
+		{
+			name:   "successful find",
+			userID: 1,
+			mockFunc: func() {
+				rows := sqlmock.NewRows([]string{"id", "username", "password_hash"}).
+					AddRow(1, "testuser", "test hash")
+				mock.ExpectQuery("SELECT id, username, password_hash FROM users").
+					WithArgs(1).
+					WillReturnRows(rows)
+			},
+			wantUser: &models.User{
+				UserID:       1,
+				Username:     "testuser",
+				PasswordHash: "test hash",
+			},
+			wantErr: false,
+		},
+		{
+			name:   "no user found",
+			userID: 1,
+			mockFunc: func() {
+				rows := sqlmock.NewRows([]string{"id", "username", "password_hash"})
+				mock.ExpectQuery("SELECT id, username, password_hash FROM users").
+					WithArgs(1).
+					WillReturnRows(rows)
+			},
+			wantUser: nil,
+			wantErr:  false,
+		},
+		{
+			name:   "database error",
+			userID: 1,
+			mockFunc: func() {
+				mock.ExpectQuery("SELECT id, username, password_hash FROM users").
+					WithArgs(1).
+					WillReturnError(sql.ErrConnDone)
+			},
+			wantUser: nil,
+			wantErr:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockFunc()
+
+			user, err := storage.FindUserByID(context.Background(), tt.userID)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.wantUser, user)
+			}
+		})
+	}
 }

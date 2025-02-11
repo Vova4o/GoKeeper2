@@ -449,6 +449,100 @@ func TestRefreshToken(t *testing.T) {
 	}
 }
 
+func TestUpdateDataOnServer(t *testing.T) {
+	client, serv, authClient, teardown := setupTestGRPCClient(t)
+	defer teardown()
+
+	// Создаем валидный токен для тестов
+	validToken := createTestJWT(time.Now().Add(time.Hour))
+
+	tests := []struct {
+		name          string
+		accessToken   string
+		masterPass    string
+		inputData     models.Data
+		mockResponse  *pb.SendDataResponse
+		mockError     error
+		expectedError error
+	}{
+		{
+			name:        "successful update login password",
+			accessToken: validToken,
+			masterPass:  "testmaster123",
+			inputData: models.Data{
+				DBID:     1,
+				DataType: models.DataTypeLoginPassword,
+				Data: models.LoginPassword{
+					DBID:     1,
+					Title:    "test title",
+					Login:    "test login",
+					Password: "test password",
+				},
+			},
+			mockResponse: &pb.SendDataResponse{
+				Success: true,
+			},
+			mockError:     nil,
+			expectedError: nil,
+		},
+		{
+			name:        "server error",
+			accessToken: validToken,
+			masterPass:  "testmaster123",
+			inputData: models.Data{
+				DBID:     1,
+				DataType: models.DataTypeLoginPassword,
+				Data: models.LoginPassword{
+					DBID:     1,
+					Title:    "test title",
+					Login:    "test login",
+					Password: "test password",
+				},
+			},
+			mockResponse:  nil,
+			mockError:     status.Error(codes.Internal, "internal server error"),
+			expectedError: status.Error(codes.Internal, "internal server error"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Устанавливаем начальное состояние
+			client.AccessToken = tt.accessToken
+			client.MasterPassword = tt.masterPass
+
+			// Сбрасываем моки
+			authClient.ExpectedCalls = nil
+			serv.ExpectedCalls = nil
+
+			if tt.accessToken == validToken {
+				encryptedData, err := encryptData(tt.inputData, tt.masterPass)
+				assert.NoError(t, err)
+
+				pbData := convertDataToPBDatas(encryptedData)
+				authClient.On("UpdateData", mock.Anything, mock.MatchedBy(func(data *pb.DataToPass) bool {
+					return data.DBID == pbData.DBID && data.DataType == pbData.DataType
+				})).Return(tt.mockResponse, tt.mockError)
+			}
+
+			// Выполняем тест
+			err := client.UpdateDataOnServer(context.Background(), tt.inputData)
+
+			// Проверяем результаты
+			if tt.expectedError != nil {
+				assert.Error(t, err)
+				assert.Equal(t, tt.expectedError.Error(), err.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+
+			// Проверяем, что все ожидаемые вызовы были выполнены
+			authClient.AssertExpectations(t)
+			serv.AssertExpectations(t)
+		})
+	}
+}
+
 func TestCheckAndRefreshToken(t *testing.T) {
 	client, serv, authClient, teardown := setupTestGRPCClient(t)
 	defer teardown()
@@ -560,6 +654,76 @@ func TestCheckAndRefreshToken(t *testing.T) {
 				assert.NoError(t, err)
 			}
 			assert.Equal(t, tt.wantToken, client.AccessToken)
+
+			// Проверяем, что все ожидаемые вызовы были выполнены
+			authClient.AssertExpectations(t)
+			serv.AssertExpectations(t)
+		})
+	}
+}
+
+func TestDeleteDataFromServer(t *testing.T) {
+	client, serv, authClient, teardown := setupTestGRPCClient(t)
+	defer teardown()
+
+	// Создаем валидный токен для тестов
+	validToken := createTestJWT(time.Now().Add(time.Hour))
+
+	tests := []struct {
+		name          string
+		accessToken   string
+		masterPass    string
+		inputData     int
+		mockResponse  *pb.SendDataResponse
+		mockError     error
+		expectedError error
+	}{
+		{
+			name:        "successful delete data",
+			accessToken: validToken,
+			masterPass:  "testmaster123",
+			inputData:   1,
+			mockResponse: &pb.SendDataResponse{
+				Success: true,
+			},
+			mockError:     nil,
+			expectedError: nil,
+		},
+		{
+			name:          "server error",
+			accessToken:   validToken,
+			masterPass:    "testmaster123",
+			inputData:     1,
+			mockResponse:  nil,
+			mockError:     status.Error(codes.Internal, "internal server error"),
+			expectedError: status.Error(codes.Internal, "internal server error"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Устанавливаем начальное состояние
+			client.AccessToken = tt.accessToken
+			client.MasterPassword = tt.masterPass
+
+			// Сбрасываем моки
+			authClient.ExpectedCalls = nil
+			serv.ExpectedCalls = nil
+
+			if tt.accessToken == validToken {
+				authClient.On("DeleteData", mock.Anything, mock.Anything).Return(tt.mockResponse, tt.mockError)
+			}
+
+			// Выполняем тест
+			err := client.DeleteDataFromServer(context.Background(), tt.inputData)
+
+			// Проверяем результаты
+			if tt.expectedError != nil {
+				assert.Error(t, err)
+				assert.Equal(t, tt.expectedError.Error(), err.Error())
+			} else {
+				assert.NoError(t, err)
+			}
 
 			// Проверяем, что все ожидаемые вызовы были выполнены
 			authClient.AssertExpectations(t)
@@ -874,6 +1038,98 @@ func TestGetDataFromServer(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestEncryptAndDecryptData(t *testing.T) {
+    tests := []struct {
+        name        string
+        inputData   models.Data
+        key         string
+        expectedErr bool
+    }{
+        {
+            name: "successful encrypt and decrypt login password",
+            inputData: models.Data{
+                DBID:     1,
+                DataType: models.DataTypeLoginPassword,
+                Data: models.LoginPassword{
+                    DBID:     1,
+                    Title:    "test title",
+                    Login:    "test login",
+                    Password: "test password",
+                },
+            },
+            key:         "testkey123",
+            expectedErr: false,
+        },
+        {
+            name: "successful encrypt and decrypt text note",
+            inputData: models.Data{
+                DBID:     2,
+                DataType: models.DataTypeTextNote,
+                Data: models.TextNote{
+                    DBID:  2,
+                    Title: "note title",
+                    Text:  "note text",
+                },
+            },
+            key:         "testkey123",
+            expectedErr: false,
+        },
+        {
+            name: "successful encrypt and decrypt binary data",
+            inputData: models.Data{
+                DBID:     3,
+                DataType: models.DataTypeBinaryData,
+                Data: models.BinaryData{
+                    DBID:  3,
+                    Title: "binary title",
+                    Data:  []byte{1, 2, 3, 4, 5},
+                },
+            },
+            key:         "testkey123",
+            expectedErr: false,
+        },
+        {
+            name: "successful encrypt and decrypt bank card",
+            inputData: models.Data{
+                DBID:     4,
+                DataType: models.DataTypeBankCard,
+                Data: models.BankCard{
+                    DBID:       4,
+                    Title:      "card title",
+                    CardNumber: "1234 5678 9012 3456",
+                    ExpiryDate: "12/34",
+                    Cvv:        "123",
+                },
+            },
+            key:         "testkey123",
+            expectedErr: false,
+        },
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            // Шифрование данных
+            encryptedData, err := encryptData(tt.inputData, tt.key)
+            if tt.expectedErr {
+                assert.Error(t, err)
+                return
+            } else {
+                assert.NoError(t, err)
+                assert.NotEmpty(t, encryptedData.DataString)
+            }
+
+            // Расшифрование данных
+            decryptedData, err := decryptData(encryptedData, tt.key)
+            if tt.expectedErr {
+                assert.Error(t, err)
+            } else {
+                assert.NoError(t, err)
+                assert.Equal(t, tt.inputData, decryptedData)
+            }
+        })
+    }
 }
 
 func createTestJWT(expirationTime time.Time) string {

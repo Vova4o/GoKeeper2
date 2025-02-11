@@ -400,29 +400,6 @@ func (c *GRPCClient) UpdateDataOnServer(ctx context.Context, data models.Data) e
 	return nil
 }
 
-// DeleteDataOnServer deletes existing record
-func (c *GRPCClient) DeleteDataOnServer(ctx context.Context, dbID int) error {
-	c.log.Info("Delete data handle called.")
-
-	err := c.CheckAndRefreshToken(ctx)
-	if err != nil {
-		c.log.Error("Failed to refresh token: " + err.Error())
-		return err
-	}
-
-	// Добавление токена в метаданные
-	md := metadata.New(map[string]string{"authorization": c.AccessToken})
-	ctx = metadata.NewOutgoingContext(ctx, md)
-
-	_, err = c.client.DeleteData(ctx, &pb.DeleteRequest{DBID: int64(dbID)})
-	if err != nil {
-		c.log.Error("Failed to delete data: " + err.Error())
-		return err
-	}
-
-	return nil
-}
-
 // encryptData encrypts data based on its type
 func encryptData(data models.Data, key string) (models.DataToPass, error) {
 	var encryptedData string

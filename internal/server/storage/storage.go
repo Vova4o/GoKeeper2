@@ -6,8 +6,8 @@ import (
 	"time"
 
 	// Используем драйвер для PostgreSQL
-
 	_ "github.com/lib/pq"
+
 	"github.com/vova4o/gokeeper2/internal/server/models"
 	"github.com/vova4o/gokeeper2/package/logger"
 )
@@ -187,19 +187,6 @@ func (s *Storage) FindUserByID(ctx context.Context, userID int) (*models.User, e
 	}
 
 	return user, nil
-}
-
-// SaveLoginPassword сохраняет логин и пароль
-func (s *Storage) SaveLoginPassword(ctx context.Context, userID int, loginPassword models.LoginPassword) error {
-	query := `UPDATE private_infos SET username = $1, password = $2, updated_at = $3 WHERE user_id = $4 AND data_type = $5`
-	_, err := s.db.ExecContext(ctx, query, loginPassword.Login, loginPassword.Password, time.Now(), userID, models.DataTypeLoginPassword)
-	if err != nil {
-		s.logger.Error("Failed to save login password")
-		return err
-	}
-
-	s.logger.Info("Login password saved successfully")
-	return nil
 }
 
 // CheckMasterPassword проверяет мастер-пароль

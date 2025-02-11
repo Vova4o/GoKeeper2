@@ -23,7 +23,7 @@ type GRPCClienter interface {
 	AddDataToServer(ctx context.Context, data models.Data) error
 	GetDataFromServer(ctx context.Context, dataType models.DataTypes) ([]models.Data, error)
 	UpdateDataOnServer(ctx context.Context, data models.Data) error
-	DeleteDataOnServer(ctx context.Context, data int) error
+	DeleteDataFromServer(ctx context.Context, data int) error
 }
 
 // UI структура для графического интерфейса
@@ -384,7 +384,7 @@ func (u *UI) showPasswords() fyne.CanvasObject {
 		})
 		deleteButton := widget.NewButton("Удалить", func() {
 			// Логика для удаления карты
-			u.handler.DeleteDataOnServer(u.ctx, passwordInside.DBID)
+			u.handler.DeleteDataFromServer(u.ctx, passwordInside.DBID)
 		})
 		buttons := container.NewHBox(changeButton, deleteButton)
 		passwordsWidgets = append(passwordsWidgets, buttons)
@@ -504,7 +504,7 @@ func (u *UI) showTextNotes() fyne.CanvasObject {
 		deleteButton := widget.NewButton("Удалить", func() {
 			u.logger.Info("Удалить карту: " + note.Title)
 			// Логика для удаления карты
-			u.handler.DeleteDataOnServer(u.ctx, note.DBID)
+			u.handler.DeleteDataFromServer(u.ctx, note.DBID)
 		})
 		buttons := container.NewHBox(changeButton, deleteButton)
 		textNotesWidgets = append(textNotesWidgets, buttons)
@@ -649,7 +649,7 @@ func (u *UI) showBankCards() fyne.CanvasObject {
 		deleteButton := widget.NewButton("Удалить", func() {
 			u.logger.Info("Удалить карту: " + card.Title)
 			// Логика для удаления карты
-			u.handler.DeleteDataOnServer(u.ctx, card.DBID)
+			u.handler.DeleteDataFromServer(u.ctx, card.DBID)
 		})
 		buttons := container.NewHBox(changeButton, deleteButton)
 		bankCardsWidgets = append(bankCardsWidgets, buttons)
@@ -772,7 +772,7 @@ func (u *UI) showBinaryFiles() fyne.CanvasObject {
 		deleteButton := widget.NewButton("Удалить", func() {
 			u.logger.Info("Удалить карту: " + file.Title)
 			// Логика для удаления карты
-			u.handler.DeleteDataOnServer(u.ctx, file.DBID)
+			u.handler.DeleteDataFromServer(u.ctx, file.DBID)
 		})
 		buttons := container.NewHBox(deleteButton)
 		binaryFilesWidgets = append(binaryFilesWidgets, buttons)
