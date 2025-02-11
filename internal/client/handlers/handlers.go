@@ -40,14 +40,11 @@ type GRPCClient struct {
 type Servicer interface {
 	AddOrReplaceRefreshToken(ctx context.Context, data string) error
 	GetRefreshToken(ctx context.Context) (string, error)
-	// AddRecord(ctx context.Context, data models.Data, synchronized bool) error
-	// GetRecords(ctx context.Context) ([]models.Record, error)
 }
 
 // NewGRPCClient function for creating new client
 func NewGRPCClient(ctx context.Context, address string, creds credentials.TransportCredentials, log *logger.Logger, serv Servicer) (*GRPCClient, error) {
 	conn, err := grpc.NewClient(address, grpc.WithTransportCredentials(creds))
-	// conn, err := grpc.DialContext(ctx, address, grpc.WithTransportCredentials(creds))
 	if err != nil {
 		return nil, err
 	}

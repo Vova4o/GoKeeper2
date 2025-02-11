@@ -784,7 +784,11 @@ func (u *UI) showBinaryFiles() fyne.CanvasObject {
 		deleteButton := widget.NewButton("Удалить", func() {
 			u.logger.Info("Удалить карту: " + file.Title)
 			// Логика для удаления карты
-			u.handler.DeleteDataFromServer(u.ctx, file.DBID)
+			err := u.handler.DeleteDataFromServer(u.ctx, file.DBID)
+			if err != nil {
+				log.Println("Failed to delete binary file:", err)
+				u.showMainWindow(fyne.CurrentApp())
+			}
 		})
 		buttons := container.NewHBox(deleteButton)
 		binaryFilesWidgets = append(binaryFilesWidgets, buttons)
