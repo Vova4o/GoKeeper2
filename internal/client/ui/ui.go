@@ -384,7 +384,11 @@ func (u *UI) showPasswords() fyne.CanvasObject {
 		})
 		deleteButton := widget.NewButton("Удалить", func() {
 			// Логика для удаления карты
-			u.handler.DeleteDataFromServer(u.ctx, passwordInside.DBID)
+			err := u.handler.DeleteDataFromServer(u.ctx, passwordInside.DBID)
+			if err != nil {
+				log.Println("Failed to delete password:", err)
+				u.showMainWindow(fyne.CurrentApp())
+			}
 		})
 		buttons := container.NewHBox(changeButton, deleteButton)
 		passwordsWidgets = append(passwordsWidgets, buttons)
@@ -504,7 +508,11 @@ func (u *UI) showTextNotes() fyne.CanvasObject {
 		deleteButton := widget.NewButton("Удалить", func() {
 			u.logger.Info("Удалить карту: " + note.Title)
 			// Логика для удаления карты
-			u.handler.DeleteDataFromServer(u.ctx, note.DBID)
+			err := u.handler.DeleteDataFromServer(u.ctx, note.DBID)
+			if err != nil {
+				log.Println("Failed to delete text note:", err)
+				u.showMainWindow(fyne.CurrentApp())
+			}
 		})
 		buttons := container.NewHBox(changeButton, deleteButton)
 		textNotesWidgets = append(textNotesWidgets, buttons)
@@ -649,7 +657,11 @@ func (u *UI) showBankCards() fyne.CanvasObject {
 		deleteButton := widget.NewButton("Удалить", func() {
 			u.logger.Info("Удалить карту: " + card.Title)
 			// Логика для удаления карты
-			u.handler.DeleteDataFromServer(u.ctx, card.DBID)
+			err := u.handler.DeleteDataFromServer(u.ctx, card.DBID)
+			if err != nil {
+				log.Println("Failed to delete bank card:", err)
+				u.showMainWindow(fyne.CurrentApp())
+			}
 		})
 		buttons := container.NewHBox(changeButton, deleteButton)
 		bankCardsWidgets = append(bankCardsWidgets, buttons)
