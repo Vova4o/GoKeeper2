@@ -20,8 +20,18 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
+var (
+	buildDate    = "unknown"
+	buildVersion = "dev"
+)
+
 func main() {
 	dbName := "keeper.db"
+
+	if len(os.Args) > 1 && os.Args[1] == "version" {
+		printVersion()
+		return
+	}
 
 	// Log message
 	logger := logger.NewLogger("info")
@@ -91,4 +101,14 @@ func main() {
 	}()
 
 	ui.RunUI()
+}
+
+func printVersion() {
+	if buildVersion == "" {
+		buildVersion = "dev"
+	}
+	if buildDate == "" {
+		buildDate = "unknown"
+	}
+	log.Printf("Version: %s\nBuild date: %s\n", buildVersion, buildDate)
 }

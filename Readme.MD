@@ -1,61 +1,40 @@
-# GoKeeper2
+# GoKeeper
+
+**GophKeeper представляет собой клиент-серверную систему,
+позволяющую пользователю надёжно и безопасно хранить логины,
+пароли, бинарные данные и прочую приватную информацию.**
+
+Сервер реализовывает следующую бизнес-логику:
+- регистрация, аутентификация и авторизация пользователей;
+- хранение приватных данных;
+- синхронизация данных между несколькими авторизованными клиентами одного владельца;
+- передача приватных данных владельцу по запросу.
+- изменение приватных данных владельца.
+- удаление приватных данных владельца.
+
+Клиент должен реализовывать следующую бизнес-логику:
+- аутентификация и авторизация пользователей на удалённом сервере;
+- доступ к приватным данным по запросу.
+
+Функции, реализованные на сервере:
+- создание, редактирование и удаление данных на стороне сервера или клиента;
+- регистрация нового пользователя;
+- хранилище данных PostgreSQL;
+- обеспечение безопасности передачи и хранения данных с помощью протокола TLS;
+- протокол взаимодействия клиента и сервера - gRPC;
+- механизмы аутентификации пользователя и авторизации доступа к информации.
+
+Дополнительные Функции:
+- клиент сделан в виде GUI-приложения с возможностью запуска на платформах Windows, Linux и Mac OS;
+- клиент дает пользователю возможность получить информацию о версии и дате сборки бинарного файла клиента.
 
 ## Данные о тестах и покрытии Codecov
 
 [![codecov](https://codecov.io/gh/vova4o/gokeeper2/branch/main/graph/badge.svg)](https://codecov.io/gh/vova4o/gokeeper2)
 
-
 ## Запуск локального сервера в докере
 
-```bash
-
-docker-compose up -d
-
-```
-
-## Компиляция под винду требует дополнительных шагов
-
-```bash
-
-# Установка инструментов для кросс-компиляции
-brew install mingw-w64
-
-# Установка необходимых переменных окружения
-export CC=x86_64-w64-mingw32-gcc
-export CXX=x86_64-w64-mingw32-g++
-
-# Теперь можно собрать приложение
-GOOS=windows GOARCH=amd64 CGO_ENABLED=1 go build -o dist/client.exe cmd/client/*.go
-
-```
-
-## После компиляции под винду
-
-```bash
-
-# Необходимо очистить переменные окружения
-unset CC
-unset CXX
-
-```
-
-Это позволит без провлем собирать приложения под мак и линукс
-
-Importante!
-
-If you expiriancing the following error:
-protobuf/auth/auth_grpc.pb.go:19:16: undefined: grpc.SupportPackageIsVersion9
-
-you have to update the grpc package.
-
-go get google.golang.org/protobuf@latest
-go get google.golang.org/grpc@latest
-
-and rebuild the proto files.
-
-In this repo i have docker file for DB
-
-To start DB run the following command:
+В репозитории есть файл docker-compose.yml, который позволяет запустить сервер в докере.
 
 ```bash
 
@@ -63,7 +42,7 @@ docker-compose up -d
 
 ```
 
-To stop DB run the following command:
+Чтобы остановить контейнер, выполните следующую команду:
 
 ```bash
 
@@ -71,15 +50,27 @@ docker-compose down
 
 ```
 
-To start the server run the following command:
+## Сборка клиентов для разных платформ
+
+Для сборки клиента для разных платформ используйте следующие команды:
+
+Клиентская часть поддерживает возможность ввода версии сборки.
 
 ```bash
 
-go run ./cmd/server/main.go
+# Сделать скрипт исполняемым
+chmod +x build_client.sh
+
+# Запустить сборку
+./build_client.sh 1.0.0
 
 ```
 
-## Installing Protobuf
+## Раздел прото файлов
+
+Прото файлы уже сгенерированны, но если возникнет необходимость их переделать, можно запустить скрипт.
+
+### Установка proto на ваш комьпютер
 
 ```sh
 
@@ -89,21 +80,10 @@ chmod +x proto_install.sh
 
 ```
 
-## Установка protoc и плагинов
-
-1. Скачайте и установите `protoc`:
-   ```sh
-   curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v3.19.1/protoc-3.19.1-osx-x86_64.zip
-   unzip protoc-3.19.1-osx-x86_64.zip -d $HOME/protoc
-
-   go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-   go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-
-   export PATH="$HOME/protoc/bin:$PATH"
-   ```
-
-To generate the gRPC code from the protobuf file, run the following command:
+### Генерация кода из прото файла
 
 ```bash
+
 protoc --go_out=. --go-grpc_out=. ./protobuf/auth.proto
+
 ```
